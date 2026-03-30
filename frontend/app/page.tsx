@@ -192,14 +192,11 @@ export default function Dashboard() {
         }
 
         const json: ApiResponse = await res.json();
-
-        setTimeout(() => {
           setData(json);
           setContentVisible(true);
           setActiveSection("factsheet");
           showToast("Campaign generated successfully! 🎉", "success");
           setLoading(false);
-        }, 300);
       } catch (err: any) {
         console.error("[generate]", err);
         setTimeout(() => {
