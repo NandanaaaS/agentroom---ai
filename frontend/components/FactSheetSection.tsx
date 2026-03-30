@@ -69,7 +69,7 @@ export default function FactSheetSection({ data, loading }: FactSheetProps) {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="group relative rounded-2xl dark:bg-gray-900 bg-white border dark:border-gray-800 border-slate-200 p-5">
-          <p className="text-[11px] uppercase tracking-[0.15em] font-semibold mb-3 text-gray-500 dark:text-gray-400">
+          <p className="text-[11px] uppercase tracking-[0.15em] font-semibold mb-3 dark:text-gray-400 text-gray-500">
             Price
           </p>
           <p className="text-3xl font-bold text-amber-500">
@@ -78,7 +78,7 @@ export default function FactSheetSection({ data, loading }: FactSheetProps) {
         </div>
 
         <div className="group relative rounded-2xl dark:bg-gray-900 bg-white border dark:border-gray-800 border-slate-200 p-5">
-          <p className="text-[11px] uppercase tracking-[0.15em] font-semibold mb-3 text-gray-500 dark:text-gray-400">
+          <p className="text-[11px] uppercase tracking-[0.15em] font-semibold mb-3 dark:text-gray-400 text-gray-500">
             Target Audience
           </p>
           <p className="text-base font-semibold text-blue-500 capitalize">
@@ -97,7 +97,7 @@ export default function FactSheetSection({ data, loading }: FactSheetProps) {
       </div>
 
       <div className="rounded-2xl dark:bg-gray-900 bg-white border dark:border-gray-800 border-slate-200 p-6">
-        <p className="text-[11px] uppercase tracking-[0.15em] font-semibold mb-5 text-gray-500 dark:text-gray-400">
+        <p className="text-[11px] uppercase tracking-[0.15em] font-semibold mb-5 dark:text-gray-400 text-gray-500">
           Feature Highlights
         </p>
         <div className="flex flex-wrap gap-3">

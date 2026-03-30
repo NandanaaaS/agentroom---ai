@@ -85,8 +85,8 @@ export default function Sidebar({ activeSection, onSectionChange, isOpen, darkMo
                 </p>
                 <p className={`text-[11px] truncate mt-0.5 ${
                   isActive
-                    ? darkMode ? "text-amber-500/70" : "text-amber-600/70"
-                    : darkMode ? "text-gray-600" : "text-slate-400"
+                    ? darkMode ? "text-amber-400/90" : "text-amber-600/70"
+                    : darkMode ? "text-gray-500" : "text-slate-400"
                 }`}>
                   {item.description}
                 </p>

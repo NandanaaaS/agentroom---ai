@@ -8,12 +8,12 @@ export function parseContent(raw: string): ContentData {
   const result: ContentData = { blog: "", social: [], email: "" };
   if (!raw) return result;
 
-  // 1. Identify the starting positions of each section
-  const blogIdx = raw.search(/(?:^|\n)(?:\d\.|\*\*|##|#|[ \t]*)(?:Blog)/i);
-  const socialIdx = raw.search(/(?:^|\n)(?:\d\.|\*\*|##|#|[ \t]*)(?:Social|Post|Thread)/i);
-  const emailIdx = raw.search(/(?:^|\n)(?:\d\.|\*\*|##|#|[ \t]*)(?:Email|Teaser)/i);
+  // 1. Find indices of each section
+  // We look for common markers like **Blog**, # Social, 3. Email
+  const blogIdx = raw.search(/(?:^|\n)(?:\*\*|##|#|[ \t]*\d\.?[ \t]*)(?:Blog)/i);
+  const socialIdx = raw.search(/(?:^|\n)(?:\*\*|##|#|[ \t]*\d\.?[ \t]*)(?:Social|Post|Thread)/i);
+  const emailIdx = raw.search(/(?:^|\n)(?:\*\*|##|#|[ \t]*\d\.?[ \t]*)(?:Email|Teaser|Campaign)/i);
 
-  // 2. Extract substrings based on those positions
   const anchors = [
     { type: 'blog', index: blogIdx },
     { type: 'social', index: socialIdx },
@@ -27,16 +27,15 @@ export function parseContent(raw: string): ContentData {
     const end = anchors[i + 1] ? anchors[i + 1].index : raw.length;
     let content = raw.slice(start, end).trim();
     
-    // Remove the header line itself (e.g., "**Social Media Posts**")
-    content = content.replace(/^(?:\d\.|\*\*|##|#|[ \t]*)*(?:Blog|Social|Email|Post|Teaser)[^]*?\n/i, "").trim();
+    // This removes the header line itself so it doesn't appear in your UI
+    content = content.replace(/^(?:\*\*|##|#|[ \t]*\d\.?[ \t]*)*(?:Blog|Social|Email|Post|Teaser|Campaign)[^]*?\n/i, "").trim();
     sections[anchor.type] = content;
   });
 
-  // 3. Map to result object
   result.blog = sections.blog || "";
   result.email = sections.email || "";
 
-  // 4. Handle Social Posts Array
+  // 2. Process Social Posts Array
   if (sections.social) {
     const posts = sections.social
       .split(/(?:\n|^)(?:Post\s*\d+[:.]?|\d+[:.]|[•\-\*])\s*/i)
@@ -46,7 +45,7 @@ export function parseContent(raw: string): ContentData {
     result.social = posts.length > 0 ? posts : [sections.social];
   }
 
-  // Fallback: If everything failed, put raw text in blog
+  // Fallback if split failed
   if (!result.blog && !result.social.length && !result.email) {
     result.blog = raw.trim();
   }

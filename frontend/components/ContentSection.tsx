@@ -65,7 +65,7 @@ export default function ContentSection({ activeTab, onTabChange, content, loadin
             {/* Blog Section */}
             {activeTab === "blog" && (
               <div className="prose dark:prose-invert max-w-none">
-                <div className="whitespace-pre-wrap leading-relaxed dark:text-gray-300 text-slate-700">
+                <div className="whitespace-pre-wrap leading-relaxed dark:text-gray-200 text-slate-700">
                   {content.blog}
                 </div>
               </div>
@@ -77,17 +77,17 @@ export default function ContentSection({ activeTab, onTabChange, content, loadin
                 {content.social.map((post, i) => (
                   <div 
                     key={i} 
-                    className="group p-5 rounded-2xl border dark:border-gray-800 dark:bg-gray-900 bg-slate-50 transition-all hover:border-amber-500/50"
+                    className="group p-5 rounded-2xl border dark:border-gray-800 dark:bg-gray-900/50 bg-slate-50 transition-all hover:border-amber-500/50"
                   >
                     <div className="flex items-center gap-2 mb-3">
                       <div className="w-6 h-6 rounded-full bg-amber-500/10 flex items-center justify-center text-[10px] text-amber-500 font-bold border border-amber-500/20">
                         {i + 1}
                       </div>
-                      <span className="text-[11px] font-bold uppercase tracking-wider dark:text-gray-500 text-slate-400">
+                      <span className="text-[11px] font-bold uppercase tracking-wider dark:text-gray-400 text-slate-500">
                         Platform Update
                       </span>
                     </div>
-                    <div className="text-sm leading-relaxed dark:text-gray-300 text-slate-700 whitespace-pre-wrap">
+                    <div className="text-sm leading-relaxed dark:text-gray-200 text-slate-700 whitespace-pre-wrap">
                       {post}
                     </div>
                   </div>
@@ -101,7 +101,7 @@ export default function ContentSection({ activeTab, onTabChange, content, loadin
                  <div className="absolute top-0 left-0 px-2 py-0.5 bg-blue-500/10 text-blue-500 text-[10px] font-bold rounded uppercase border border-blue-500/20">
                     Draft
                  </div>
-                 <div className="whitespace-pre-wrap leading-relaxed dark:text-gray-300 text-slate-700 font-mono text-sm pt-2">
+                 <div className="whitespace-pre-wrap leading-relaxed dark:text-gray-100 text-slate-800 font-mono text-sm pt-2">
                   {content.email}
                 </div>
               </div>

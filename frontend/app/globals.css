@@ -10,6 +10,14 @@
   html {
     scroll-behavior: smooth;
   }
+  body {
+    @apply bg-slate-50 text-slate-900 transition-colors duration-300;
+  }
+
+  .dark body {
+    background-color: #030712; /* This is gray-950 */
+    color: #f3f4f6;            /* This is gray-100 (Bright enough to see!) */
+  }
 
   /* Custom scrollbar */
   ::-webkit-scrollbar {

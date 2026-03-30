@@ -35,7 +35,7 @@ export default function Header({ darkMode, onToggleDark, onMenuOpen, onRegenerat
           <h1 className={`text-sm sm:text-base font-bold tracking-tight ${darkMode ? "text-white" : "text-slate-900"}`}>
             AI Content Generator
           </h1>
-          <p className={`text-[11px] hidden sm:block ${darkMode ? "text-gray-500" : "text-slate-400"}`}>
+          <p className={`text-[11px] hidden sm:block ${darkMode ? "text-gray-400" : "text-slate-500"}`}>
             Multi-agent pipeline dashboard
           </p>
         </div>
