@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import FactSheetSection from "@/components/FactSheetSection";
@@ -22,78 +22,147 @@ export interface ApiResponse {
   logs: string[];
 }
 
-const MOCK_DATA: ApiResponse = {
-  factSheet: {
-    product_name: "EcoChill Bottle",
-    features: ["Leak-proof", "Temperature control", "Eco-friendly"],
-    price: 25,
-    target_audience: "eco-conscious users",
-  },
-  finalContent: `BLOG:
-## Stay Cool, Stay Green: The EcoChill Bottle Revolution
+const TONE_OPTIONS = [
+  { value: "professional", label: "Professional" },
+  { value: "casual", label: "Casual" },
+  { value: "funny", label: "Funny" },
+  { value: "inspirational", label: "Inspirational" },
+];
 
-In a world increasingly aware of its environmental footprint, the EcoChill Bottle emerges as the perfect companion for the eco-conscious consumer. Priced at an accessible $25, this isn't just a water bottle — it's a lifestyle statement.
+// --- Input modal (Your Original Styling) ---
+interface InputModalProps {
+  onSubmit: (content: string, tone: string) => void;
+  onClose: () => void;
+  darkMode: boolean;
+  initialContent: string;
+  initialTone: string;
+}
 
-Crafted with sustainability at its core, the EcoChill Bottle combines three powerful features: leak-proof engineering, advanced temperature control technology, and eco-friendly materials. Whether you're commuting through the city or hiking mountain trails, your beverages stay at the perfect temperature for up to 24 hours.
+function InputModal({ onSubmit, onClose, darkMode, initialContent, initialTone }: InputModalProps) {
+  const [content, setContent] = useState(initialContent);
+  const [tone, setTone] = useState(initialTone);
+  const isEmpty = content.trim().length === 0;
 
-The leak-proof seal means you can toss it in your bag without a second thought. The double-wall vacuum insulation keeps drinks cold for 24 hours and hot for 12. And because it's made from recycled materials, every sip you take is a small victory for the planet.
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <div
+        className={`relative w-full max-w-lg mx-4 rounded-2xl shadow-2xl p-6 ${darkMode ? "bg-gray-900 text-white" : "bg-white text-gray-900"}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className="text-xl font-semibold mb-4">Generate Campaign</h2>
+        <label className="block mb-1 text-sm font-medium opacity-70">Product / Idea description</label>
+        <textarea
+          className={`w-full h-36 rounded-xl border p-3 text-sm resize-none focus:outline-none focus:ring-2 transition ${
+            darkMode ? "bg-gray-800 border-gray-700 focus:ring-indigo-500" : "bg-slate-50 border-slate-300 focus:ring-indigo-400"
+          }`}
+          placeholder="Describe your product/idea here..."
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+        />
+        <label className="block mt-4 mb-1 text-sm font-medium opacity-70">Tone</label>
+        <div className="flex gap-2 flex-wrap">
+          {TONE_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => setTone(opt.value)}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium border transition ${
+                tone === opt.value
+                  ? "bg-indigo-600 border-indigo-600 text-white"
+                  : darkMode
+                  ? "border-gray-600 text-gray-300 hover:border-indigo-400"
+                  : "border-slate-300 text-slate-600 hover:border-indigo-400"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+        <div className="flex justify-end gap-3 mt-6">
+          <button onClick={onClose} className={`px-4 py-2 rounded-xl text-sm font-medium transition ${darkMode ? "text-gray-400 hover:text-white" : "text-slate-500 hover:text-slate-800"}`}>
+            Cancel
+          </button>
+          <button
+            disabled={isEmpty}
+            onClick={() => !isEmpty && onSubmit(content.trim(), tone)}
+            className="px-5 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
+          >
+            Generate ✨
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-Join thousands of eco-conscious users who've already made the switch. The EcoChill Bottle isn't just about staying hydrated — it's about staying committed to a better future.
+// --- Persistent input panel (Your Original Styling) ---
+interface InputPanelProps {
+  content: string;
+  tone: string;
+  setContent: (v: string) => void;
+  setTone: (v: string) => void;
+  onGenerate: () => void;
+  darkMode: boolean;
+}
 
-SOCIAL:
-Post 1: 🌿 Meet your new hydration hero. The EcoChill Bottle keeps drinks perfect while keeping the planet happier. Leak-proof. Temperature-controlled. Eco-friendly. All for just $25. #EcoChill #SustainableLiving #HydrationGoals
+function InputPanel({ content, tone, setContent, setTone, onGenerate, darkMode }: InputPanelProps) {
+  return (
+    <div className="mb-6 p-4 bg-white dark:bg-gray-900 rounded-xl shadow-sm border dark:border-gray-800">
+      <label className="block mb-2 font-medium opacity-80">Product / Idea description</label>
+      <textarea
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        className={`w-full p-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:border-gray-700`}
+        placeholder="Describe your product/idea here..."
+      />
+      <label className="block mt-4 mb-2 font-medium opacity-80">Tone</label>
+      <div className="flex gap-2 flex-wrap">
+        {TONE_OPTIONS.map((opt) => (
+          <button
+            key={opt.value}
+            onClick={() => setTone(opt.value)}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium border transition ${
+              tone === opt.value
+                ? "bg-indigo-600 border-indigo-600 text-white"
+                : darkMode
+                ? "border-gray-600 text-gray-300 hover:border-indigo-400"
+                : "border-gray-300 text-gray-600 hover:border-indigo-400"
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+      <div className="flex justify-end mt-4">
+        <button onClick={onGenerate} className="px-5 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 transition">
+          Generate ✨
+        </button>
+      </div>
+    </div>
+  );
+}
 
-Post 2: Hot coffee in the morning. Ice-cold water by noon. The EcoChill Bottle handles it all — and it's 100% eco-friendly. Your wallet and the planet will thank you. 💧 Shop now for only $25! #GreenLiving #EcoBottle
-
-Post 3: Why choose between convenience and conscience? 🌍 The EcoChill Bottle is leak-proof, temperature-controlling, and made with eco-friendly materials. Perfect for the conscious consumer. Only $25. Tag a friend who needs this! #EcoConscious #ZeroWaste
-
-EMAIL:
-Subject: Introducing EcoChill — Hydration That Cares
-
-Hi there,
-
-We're thrilled to introduce the EcoChill Bottle — the hydration solution designed for people who care about quality AND the planet.
-
-Here's what makes EcoChill special:
-✓ Leak-proof design — toss it in your bag, no worries
-✓ Temperature control — hot or cold, hours on end  
-✓ Eco-friendly materials — because the planet matters
-
-And the best part? It's just $25.
-
-Whether you're at the gym, in the office, or exploring the outdoors, EcoChill is your perfect companion. Join our growing community of eco-conscious users making a difference, one sip at a time.
-
-Ready to make the switch?
-
-Stay cool,
-The EcoChill Team`,
-  logs: [
-    "Research Agent analyzing product specifications...",
-    "Gathering market insights for eco-conscious segment...",
-    "Copywriter Agent generating blog content...",
-    "Social media specialist crafting platform-optimized posts...",
-    "Email marketing agent composing teaser campaign...",
-    "Quality review agent checking tone and brand alignment...",
-    "Final content approved and ready for review.",
-  ],
-};
-
+// --- Main Dashboard ---
 export default function Dashboard() {
   const [activeSection, setActiveSection] = useState<Section>("factsheet");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
-  const [data, setData] = useState<ApiResponse | null>(MOCK_DATA);
+  
+  // FIX: Start with null so mock data doesn't override your input
+  const [data, setData] = useState<ApiResponse | null>(null);
+  
   const [loading, setLoading] = useState(false);
   const [contentVisible, setContentVisible] = useState(true);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
-  const parsedContent = data ? parseContent(data.finalContent) : null;
+
+  const [showModal, setShowModal] = useState(false);
+  const [lastContent, setLastContent] = useState("");
+  const [lastTone, setLastTone] = useState("professional");
+
+  const parsedContent: ContentData | null = data ? parseContent(data.finalContent) : null;
 
   useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+    if (darkMode) document.documentElement.classList.add("dark");
+    else document.documentElement.classList.remove("dark");
   }, [darkMode]);
 
   const showToast = useCallback((message: string, type: "success" | "error") => {
@@ -101,86 +170,87 @@ export default function Dashboard() {
     setTimeout(() => setToast(null), 4000);
   }, []);
 
-  const handleRegenerate = async () => {
-    setLoading(true);
-    setContentVisible(false);
-    try {
-      const res = await fetch("/api/workflow/start", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
-      });
-      if (!res.ok) throw new Error(`API error: ${res.status}`);
-      const json: ApiResponse = await res.json();
-      setTimeout(() => {
-        setData(json);
-        setContentVisible(true);
-        showToast("Content regenerated successfully!", "success");
-      }, 300);
-    } catch (err) {
-      // Fallback to mock for demo
-      setTimeout(() => {
-        setData(MOCK_DATA);
-        setContentVisible(true);
-        showToast("Using demo data — connect your API endpoint.", "error");
-      }, 1500);
-    } finally {
-      setTimeout(() => setLoading(false), 1800);
-    }
-  };
-console.log("DATA:", data);
-console.log("PARSED:", parsedContent);
+  const handleGenerate = useCallback(
+    async (content: string, tone: string) => {
+      setShowModal(false);
+      setLastContent(content);
+      setLastTone(tone);
+      setLoading(true);
+      setContentVisible(false);
+
+      try {
+        // FIX: Call local next.js proxy to avoid 401/CORS
+        const res = await fetch("/api/workflow/start", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ content, tone }),
+        });
+
+        if (!res.ok) {
+          const errJson = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+          throw new Error(errJson.error ?? `HTTP ${res.status}`);
+        }
+
+        const json: ApiResponse = await res.json();
+
+        setTimeout(() => {
+          setData(json);
+          setContentVisible(true);
+          setActiveSection("factsheet");
+          showToast("Campaign generated successfully! 🎉", "success");
+          setLoading(false);
+        }, 300);
+      } catch (err: any) {
+        console.error("[generate]", err);
+        setTimeout(() => {
+          setContentVisible(true);
+          showToast(err.message, "error");
+          setLoading(false);
+        }, 300);
+      }
+    },
+    [showToast]
+  );
+
   return (
     <div className={`min-h-screen flex font-sans transition-colors duration-500 ${darkMode ? "dark bg-gray-950" : "bg-slate-50"}`}>
-      {/* Sidebar overlay for mobile */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-20 bg-black/60 backdrop-blur-sm lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+      {sidebarOpen && <div className="fixed inset-0 z-20 bg-black/60 backdrop-blur-sm lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
-      <Sidebar
-        activeSection={activeSection}
-        onSectionChange={(s) => { setActiveSection(s); setSidebarOpen(false); }}
-        isOpen={sidebarOpen}
-        darkMode={darkMode}
-      />
+      <Sidebar activeSection={activeSection} onSectionChange={(s) => { setActiveSection(s); setSidebarOpen(false); }} isOpen={sidebarOpen} darkMode={darkMode} />
 
       <div className="flex-1 flex flex-col min-h-screen lg:ml-64">
-        <Header
-          darkMode={darkMode}
-          onToggleDark={() => setDarkMode(!darkMode)}
-          onMenuOpen={() => setSidebarOpen(true)}
-          onRegenerate={handleRegenerate}
-          loading={loading}
-        />
+        <Header darkMode={darkMode} onToggleDark={() => setDarkMode(!darkMode)} onMenuOpen={() => setSidebarOpen(true)} onRegenerate={() => setShowModal(true)} loading={loading} />
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-5xl w-full mx-auto">
-          <div
-            className={`transition-all duration-500 ${contentVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
-          >
-            {activeSection === "factsheet" && (
-              <FactSheetSection data={data?.factSheet} loading={loading} />
-            )}
-            {(activeSection === "blog" || activeSection === "social" || activeSection === "email") && (
-              <ContentSection
-                activeTab={activeSection}
-                onTabChange={(t) => setActiveSection(t)}
-                content={parsedContent}
-                loading={loading}
-              />
-            )}
-            {activeSection === "logs" && (
-              <LogsSection logs={data?.logs} loading={loading} />
+          <InputPanel
+            content={lastContent}
+            tone={lastTone}
+            setContent={setLastContent}
+            setTone={setLastTone}
+            onGenerate={() => handleGenerate(lastContent, lastTone)}
+            darkMode={darkMode}
+          />
+
+          <div className={`transition-all duration-500 ${contentVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
+            {!data && !loading ? (
+               <div className="py-20 text-center opacity-30">
+                  <p className="text-xl font-medium">Input product details to begin</p>
+               </div>
+            ) : (
+              <>
+                {activeSection === "factsheet" && <FactSheetSection data={data?.factSheet} loading={loading} />}
+                {(activeSection === "blog" || activeSection === "social" || activeSection === "email") && (
+                  <ContentSection activeTab={activeSection} onTabChange={setActiveSection} content={parsedContent} loading={loading} />
+                )}
+                {activeSection === "logs" && <LogsSection logs={data?.logs} loading={loading} />}
+              </>
             )}
           </div>
         </main>
       </div>
 
-      {toast && (
-        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
-      )}
+      {showModal && <InputModal darkMode={darkMode} initialContent={lastContent} initialTone={lastTone} onClose={() => setShowModal(false)} onSubmit={handleGenerate} />}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );
 }
