@@ -29,7 +29,7 @@ const TONE_OPTIONS = [
   { value: "inspirational", label: "Inspirational" },
 ];
 
-// --- Input modal (Your Original Styling) ---
+// --- Input modal (Updated for consistency) ---
 interface InputModalProps {
   onSubmit: (content: string, tone: string) => void;
   onClose: () => void;
@@ -94,7 +94,7 @@ function InputModal({ onSubmit, onClose, darkMode, initialContent, initialTone }
   );
 }
 
-// --- Persistent input panel (Your Original Styling) ---
+// --- Persistent input panel (Modified to support File Upload + Normal Text) ---
 interface InputPanelProps {
   content: string;
   tone: string;
@@ -102,9 +102,11 @@ interface InputPanelProps {
   setTone: (v: string) => void;
   onGenerate: () => void;
   darkMode: boolean;
+  selectedFile: File | null;
+  setSelectedFile: (file: File | null) => void;
 }
 
-function InputPanel({ content, tone, setContent, setTone, onGenerate, darkMode }: InputPanelProps) {
+function InputPanel({ content, tone, setContent, setTone, onGenerate, darkMode, selectedFile, setSelectedFile }: InputPanelProps) {
   return (
     <div className="mb-6 p-4 bg-white dark:bg-gray-900 rounded-xl shadow-sm border dark:border-gray-800">
       <label className="block mb-2 font-medium opacity-80">Product / Idea description</label>
@@ -112,8 +114,9 @@ function InputPanel({ content, tone, setContent, setTone, onGenerate, darkMode }
         value={content}
         onChange={(e) => setContent(e.target.value)}
         className={`w-full p-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:border-gray-700`}
-        placeholder="Describe your product/idea here..."
+        placeholder="Describe your product/idea here or upload a supporting document..."
       />
+      
       <label className="block mt-4 mb-2 font-medium opacity-80">Tone</label>
       <div className="flex gap-2 flex-wrap">
         {TONE_OPTIONS.map((opt) => (
@@ -132,8 +135,40 @@ function InputPanel({ content, tone, setContent, setTone, onGenerate, darkMode }
           </button>
         ))}
       </div>
-      <div className="flex justify-end mt-4">
-        <button onClick={onGenerate} className="px-5 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 transition">
+
+      <div className="flex items-center justify-between mt-6 border-t dark:border-gray-800 pt-4">
+        <div className="flex items-center gap-3">
+          <label className={`cursor-pointer flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border transition ${
+            darkMode ? "border-gray-700 hover:bg-gray-800 text-gray-300" : "border-slate-200 hover:bg-slate-50 text-slate-600"
+          }`}>
+            <span>📎 {selectedFile ? "Change File" : "Add PDF/Image"}</span>
+            <input 
+              type="file" 
+              className="hidden" 
+              accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
+              onChange={(e) => setSelectedFile(e.target.files?.[0] || null)} 
+            />
+          </label>
+          {selectedFile && (
+            <div className="flex items-center gap-2 bg-amber-500/10 px-3 py-1.5 rounded-lg border border-amber-500/20">
+              <span className="text-xs text-amber-600 dark:text-amber-400 font-medium truncate max-w-[150px]">
+                {selectedFile.name}
+              </span>
+              <button 
+                onClick={() => setSelectedFile(null)}
+                className="text-amber-600 dark:text-amber-400 hover:text-rose-500 transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+        </div>
+
+        <button 
+          onClick={onGenerate} 
+          disabled={!content.trim() && !selectedFile}
+          className="px-6 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 transition disabled:opacity-40 disabled:cursor-not-allowed shadow-md shadow-indigo-500/20"
+        >
           Generate ✨
         </button>
       </div>
@@ -146,8 +181,7 @@ export default function Dashboard() {
   const [activeSection, setActiveSection] = useState<Section>("factsheet");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
-  
-  // FIX: Start with null so mock data doesn't override your input
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [data, setData] = useState<ApiResponse | null>(null);
   
   const [loading, setLoading] = useState(false);
@@ -179,11 +213,18 @@ export default function Dashboard() {
       setContentVisible(false);
 
       try {
-        // FIX: Call local next.js proxy to avoid 401/CORS
+        // Use FormData to support both file and text
+        const formData = new FormData();
+        formData.append("content", content);
+        formData.append("tone", tone);
+        if (selectedFile) {
+          formData.append("file", selectedFile);
+        }
+
         const res = await fetch("/api/workflow/start", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ content, tone }),
+          // Note: Content-Type is NOT set manually when sending FormData
+          body: formData,
         });
 
         if (!res.ok) {
@@ -192,11 +233,12 @@ export default function Dashboard() {
         }
 
         const json: ApiResponse = await res.json();
-          setData(json);
-          setContentVisible(true);
-          setActiveSection("factsheet");
-          showToast("Campaign generated successfully! 🎉", "success");
-          setLoading(false);
+        setData(json);
+        setContentVisible(true);
+        setActiveSection("factsheet");
+        setSelectedFile(null); // Clear file on success
+        showToast("Campaign generated successfully! 🎉", "success");
+        setLoading(false);
       } catch (err: any) {
         console.error("[generate]", err);
         setTimeout(() => {
@@ -206,7 +248,7 @@ export default function Dashboard() {
         }, 300);
       }
     },
-    [showToast]
+    [selectedFile, showToast]
   );
 
   return (
@@ -226,12 +268,14 @@ export default function Dashboard() {
             setTone={setLastTone}
             onGenerate={() => handleGenerate(lastContent, lastTone)}
             darkMode={darkMode}
+            selectedFile={selectedFile}
+            setSelectedFile={setSelectedFile}
           />
 
           <div className={`transition-all duration-500 ${contentVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
             {!data && !loading ? (
                <div className="py-20 text-center opacity-30">
-                  <p className="text-xl font-medium">Input product details to begin</p>
+                  <p className="text-xl font-medium text-slate-600 dark:text-slate-400">Input product details or upload a source file to begin</p>
                </div>
             ) : (
               <>

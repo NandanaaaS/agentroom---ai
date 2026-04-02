@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { ContentData } from "@/lib/parseContent";
+import ReactMarkdown from "react-markdown";
 
 interface ContentSectionProps {
   activeTab: "blog" | "social" | "email";
@@ -22,12 +23,19 @@ function SkeletonPulse({ className }: { className: string }) {
 
 export default function ContentSection({ activeTab, onTabChange, content, loading }: ContentSectionProps) {
   const [mounted, setMounted] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     setMounted(false);
     const t = setTimeout(() => setMounted(true), 50);
     return () => clearTimeout(t);
   }, [activeTab]);
+
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <div className="space-y-6">
@@ -58,22 +66,38 @@ export default function ContentSection({ activeTab, onTabChange, content, loadin
           </div>
         ) : !content || (!content.blog && content.social.length === 0) ? (
           <div className="py-20 text-center border-2 border-dashed dark:border-gray-800 rounded-3xl opacity-40">
-            <p className="text-sm">Content sections could not be parsed. Check the Blog tab for full output.</p>
+            <p className="text-sm text-slate-500">Content sections could not be parsed. Check the logs for full output.</p>
           </div>
         ) : (
-          <div className="rounded-2xl border dark:border-gray-800 dark:bg-gray-900/30 bg-white p-6 shadow-sm">
+          <div className="relative rounded-2xl border dark:border-gray-800 dark:bg-gray-900/30 bg-white p-6 shadow-sm">
+            
+            {/* Action Buttons (Copy) */}
+            <div className="absolute top-4 right-4 z-10">
+                <button 
+                  onClick={() => {
+                    const textToCopy = activeTab === 'blog' ? content.blog : 
+                                     activeTab === 'email' ? content.email : 
+                                     content.social.join('\n\n');
+                    handleCopy(textToCopy);
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-[10px] font-bold uppercase tracking-wider hover:bg-amber-500 hover:text-white transition-all border dark:border-gray-700"
+                >
+                  {copied ? "✓ Copied" : "📋 Copy Section"}
+                </button>
+            </div>
+
             {/* Blog Section */}
             {activeTab === "blog" && (
-              <div className="prose dark:prose-invert max-w-none">
-                <div className="whitespace-pre-wrap leading-relaxed dark:text-gray-200 text-slate-700">
-                  {content.blog}
+              <div className="prose dark:prose-invert max-w-none prose-sm sm:prose-base">
+                <div className="dark:text-gray-200 text-slate-700 leading-relaxed">
+                  <ReactMarkdown>{content.blog || ""}</ReactMarkdown>
                 </div>
               </div>
             )}
 
             {/* Social Posts Section - Card Style */}
             {activeTab === "social" && (
-              <div className="space-y-4">
+              <div className="space-y-4 pt-8">
                 {content.social.map((post, i) => (
                   <div 
                     key={i} 
@@ -84,11 +108,11 @@ export default function ContentSection({ activeTab, onTabChange, content, loadin
                         {i + 1}
                       </div>
                       <span className="text-[11px] font-bold uppercase tracking-wider dark:text-gray-400 text-slate-500">
-                        Platform Update
+                        Post {i + 1}
                       </span>
                     </div>
-                    <div className="text-sm leading-relaxed dark:text-gray-200 text-slate-700 whitespace-pre-wrap">
-                      {post}
+                    <div className="text-sm leading-relaxed dark:text-gray-200 text-slate-700">
+                      <ReactMarkdown>{post}</ReactMarkdown>
                     </div>
                   </div>
                 ))}
@@ -97,12 +121,12 @@ export default function ContentSection({ activeTab, onTabChange, content, loadin
 
             {/* Email Section */}
             {activeTab === "email" && (
-              <div className="relative pt-4">
+              <div className="relative pt-10">
                  <div className="absolute top-0 left-0 px-2 py-0.5 bg-blue-500/10 text-blue-500 text-[10px] font-bold rounded uppercase border border-blue-500/20">
-                    Draft
+                    Draft Teaser
                  </div>
-                 <div className="whitespace-pre-wrap leading-relaxed dark:text-gray-100 text-slate-800 font-mono text-sm pt-2">
-                  {content.email}
+                 <div className="leading-relaxed dark:text-gray-100 text-slate-800 font-mono text-sm pt-2">
+                    <ReactMarkdown>{content.email || ""}</ReactMarkdown>
                 </div>
               </div>
             )}

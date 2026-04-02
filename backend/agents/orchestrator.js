@@ -14,7 +14,7 @@ export async function runCampaign(content, tone) {
   try {
     factSheet = JSON.parse(factSheetRaw);
   } catch (err) {
-    console.log("Invalid JSON from Research Agent:", factSheetRaw);
+    console.error("Invalid JSON from Research Agent:", factSheetRaw);
     throw new Error("Research Agent returned invalid JSON");
   }
 
