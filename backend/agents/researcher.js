@@ -11,15 +11,19 @@ export async function researchAgent(content) {
         messages: [
           {
             role: "system",
-            content: `You are a data extractor. Extract info into a FLAT JSON object. 
-            Keep 'features' as a simple array of strings, NOT objects. 
-            Be extremely brief to avoid truncation.
-            
-            Format:
+            content: `You are a data extraction specialist. Output ONLY a flat JSON object.
+
+            ### RULES:
+            1. **Price**: If you see "units sold", "reviews", or "recommendations", IGNORE those numbers. 
+            2. **Price**: Only extract a price if it is clearly a retail cost (usually has $, ₹, £, or says "Price:").
+            3. **Price**: If no retail price is found, set "price": "Not provided".
+            4. **Brief**: Keep 'features' as a simple array of strings. Do not truncate.
+
+            JSON Format:
             {
               "product_name": "Name",
               "features": ["feature 1", "feature 2"],
-              "price": 0,
+              "price": "Symbol + Value",
               "target_audience": "Audience"
             }`
           },

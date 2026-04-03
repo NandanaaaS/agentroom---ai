@@ -15,7 +15,7 @@ export interface ApiResponse {
   factSheet: {
     product_name: string;
     features: string[];
-    price: number;
+    price: string;
     target_audience: string;
   };
   finalContent: string;

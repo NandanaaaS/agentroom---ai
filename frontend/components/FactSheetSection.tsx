@@ -22,7 +22,7 @@ interface FactSheetProps {
   data?: {
     product_name: string;
     features: string[];
-    price: number;
+    price: string;
     target_audience: string;
   };
   loading: boolean;
@@ -73,7 +73,7 @@ export default function FactSheetSection({ data, loading }: FactSheetProps) {
             Price
           </p>
           <p className="text-3xl font-bold text-amber-500">
-            ${data.price}
+            {data.price || "N/A"}
           </p>
         </div>
 
