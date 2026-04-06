@@ -204,52 +204,101 @@ export default function Dashboard() {
     setTimeout(() => setToast(null), 4000);
   }, []);
 
-  const handleGenerate = useCallback(
-    async (content: string, tone: string) => {
-      setShowModal(false);
-      setLastContent(content);
-      setLastTone(tone);
-      setLoading(true);
-      setContentVisible(false);
+ const handleGenerate = useCallback(
+  async (content: string, tone: string) => {
+    setShowModal(false);
+    setLastContent(content);
+    setLastTone(tone);
+    setLoading(true);
+    setContentVisible(false);
 
-      try {
-        // Use FormData to support both file and text
-        const formData = new FormData();
-        formData.append("content", content);
-        formData.append("tone", tone);
-        if (selectedFile) {
-          formData.append("file", selectedFile);
+    try {
+      const formData = new FormData();
+      formData.append("content", content);
+      formData.append("tone", tone);
+      if (selectedFile) formData.append("file", selectedFile);
+
+      const res = await fetch("http://127.0.0.1:5000/api/workflow/start-stream", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.NEXT_PUBLIC_BACKEND_API_KEY}`,
+      },
+      body: formData,
+    });
+
+      if (!res.body) throw new Error("No stream");
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+
+      let logs: string[] = [];
+      let factSheet: any = null;
+      let finalContent = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split("\n\n");
+
+        for (let line of lines) {
+          if (!line.startsWith("data:")) continue;
+
+          const json = JSON.parse(line.replace("data:", "").trim());
+
+          if (json.type === "log") {
+            logs.push(json.message);
+            setData((prev: any) => ({
+              ...prev,
+              logs: [...logs],
+            }));
+          }
+
+          if (json.type === "factsheet") {
+            factSheet = json.data;
+            setData((prev: any) => ({
+              ...prev,
+              factSheet,
+            }));
+          }
+
+          if (json.type === "draft") {
+            setData((prev: any) => ({
+              ...prev,
+              finalContent: json.data,
+              logs: [...logs],
+              factSheet,
+            }));
+          }
+
+          if (json.type === "final") {
+            finalContent = json.data;
+            setData({
+              factSheet,
+              finalContent,
+              logs,
+            });
+
+            setLoading(false);
+            setContentVisible(true);
+            showToast("Campaign generated 🚀", "success");
+          }
+
+          if (json.type === "error") {
+            throw new Error(json.message);
+          }
         }
-
-        const res = await fetch("/api/workflow/start", {
-          method: "POST",
-          // Note: Content-Type is NOT set manually when sending FormData
-          body: formData,
-        });
-
-        if (!res.ok) {
-          const errJson = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
-          throw new Error(errJson.error ?? `HTTP ${res.status}`);
-        }
-
-        const json: ApiResponse = await res.json();
-        setData(json);
-        setContentVisible(true);
-        setActiveSection("factsheet");
-        setSelectedFile(null); // Clear file on success
-        showToast("Campaign generated successfully! 🎉", "success");
-        setLoading(false);
-      } catch (err: any) {
-        console.error("[generate]", err);
-        setTimeout(() => {
-          setContentVisible(true);
-          showToast(err.message, "error");
-          setLoading(false);
-        }, 300);
       }
-    },
-    [selectedFile, showToast]
-  );
+    } catch (err: any) {
+      console.error(err);
+      showToast(err.message, "error");
+      setLoading(false);
+      setContentVisible(true);
+    }
+  },
+  [selectedFile, showToast]
+);
 
   return (
     <div className={`min-h-screen flex font-sans transition-colors duration-500 ${darkMode ? "dark bg-gray-950" : "bg-slate-50"}`}>

@@ -1,34 +1,32 @@
-import { NextRequest, NextResponse } from "next/server";
+// frontend/app/api/workflow/start-stream/route.ts
 
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
     const formData = await req.formData();
-    const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:5000";
+
+    const BACKEND_URL = process.env.BACKEND_URL || "http://127.0.0.1:5000";
     const API_KEY = process.env.BACKEND_API_KEY;
 
-    const backendRes = await fetch(`${BACKEND_URL}/api/workflow/start`, {
+    const backendRes = await fetch(`${BACKEND_URL}/api/workflow/start-stream`, {
       method: "POST",
       headers: {
-        // We only set the Auth header. 
-        // DO NOT set 'Content-Type'; fetch sets the multipart boundary automatically.
-        "Authorization": `Bearer ${API_KEY}`,
+        Authorization: `Bearer ${API_KEY}`,
       },
       body: formData,
     });
 
-    const contentType = backendRes.headers.get("content-type");
-
-    // If backend failed or didn't send JSON, get the text to see the error
-    if (!backendRes.ok || !contentType || !contentType.includes("application/json")) {
-      const errorText = await backendRes.text();
-      console.error("Backend Error:", errorText);
-      return NextResponse.json({ error: "Backend failed. Check Node console." }, { status: backendRes.status });
+    if (!backendRes.body) {
+      return new Response("No stream", { status: 500 });
     }
 
-    const data = await backendRes.json();
-    return NextResponse.json(data);
+    // 🔥 STREAM PASSTHROUGH
+    return new Response(backendRes.body, {
+      headers: {
+        "Content-Type": "text/event-stream",
+      },
+    });
   } catch (err: any) {
     console.error("Proxy Crash:", err.message);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return new Response(err.message, { status: 500 });
   }
 }
