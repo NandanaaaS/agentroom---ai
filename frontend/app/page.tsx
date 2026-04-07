@@ -8,7 +8,7 @@ import ContentSection from "@/components/ContentSection";
 import LogsSection from "@/components/LogsSection";
 import Toast from "@/components/Toast";
 import { parseContent, ContentData } from "@/lib/parseContent";
-
+import AgentRoom from "@/components/AgentRoom";
 export type Section = "factsheet" | "blog" | "social" | "email" | "logs";
 
 export interface ApiResponse {
@@ -362,8 +362,11 @@ export default function Dashboard() {
         <div className={`transition-all duration-500 ${contentVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
           
           {loading && (
-            <LogsSection logs={data?.logs} loading={loading} />
-          )}
+  <>
+    <AgentRoom logs={data?.logs || []} />
+    <LogsSection logs={data?.logs || []} loading={loading} />
+  </>
+)}
 
           {!loading && (
             <>
