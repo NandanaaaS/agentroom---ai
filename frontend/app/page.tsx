@@ -7,8 +7,9 @@ import FactSheetSection from "@/components/FactSheetSection";
 import ContentSection from "@/components/ContentSection";
 import LogsSection from "@/components/LogsSection";
 import Toast from "@/components/Toast";
-import { parseContent, ContentData } from "@/lib/parseContent";
 import AgentRoom from "@/components/AgentRoom";
+import { parseContent, ContentData } from "@/lib/parseContent";
+
 export type Section = "factsheet" | "blog" | "social" | "email" | "logs";
 
 export interface ApiResponse {
@@ -189,6 +190,11 @@ export default function Dashboard() {
     finalContent: "",
     logs: [],
   });  
+  const [approvedSections, setApprovedSections] = useState({
+  blog: false,
+  social: false,
+  email: false,
+});
   const [loading, setLoading] = useState(false);
   const [contentVisible, setContentVisible] = useState(true);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
@@ -208,7 +214,134 @@ export default function Dashboard() {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
   }, []);
+  const handleApproveSection = useCallback(
+  (section: "blog" | "social" | "email") => {
+    setApprovedSections((prev) => ({
+      ...prev,
+      [section]: true,
+    }));
+    showToast(`${section} approved ✅`, "success");
+  },
+  [showToast]
+);
 
+const handleRegenerateSection = useCallback(
+  async (section: "blog" | "social" | "email") => {
+    try {
+      setLoading(true);
+
+      const res = await fetch("http://127.0.0.1:5000/api/workflow/regenerate-section", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_BACKEND_API_KEY}`,
+        },
+        body: JSON.stringify({
+          section,
+          factSheet: data.factSheet,
+          tone: lastTone,
+        }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new Error(json.error || "Failed to regenerate section");
+      }
+
+      const updated = json.updatedSection;
+
+      setData((prev) => {
+        const current = parseContent(prev.finalContent);
+
+        let nextBlog = current.blog;
+        let nextSocial = current.social;
+        let nextEmail = current.email;
+
+        if (section === "blog") {
+  nextBlog = updated
+    .replace(/Here is the regenerated blog section:\s*/i, "")
+    .replace(/^#\s*Blog\s*/i, "")
+    .trim();
+}
+
+if (section === "social") {
+  const cleaned = updated
+    .replace(/Here is the regenerated social section:\s*/i, "")
+    .replace(/Here is the social section.*?:\s*/i, "")
+    .replace(/\*\*/g, "")
+    .trim();
+
+  // Try numbered posts first
+  let socialPosts = cleaned
+    .split(/(?=Post\s*\d+\s*:)/i)
+    .map((p: string) => p.replace(/^Post\s*\d+\s*:\s*/i, "").trim())
+    .filter((p: string) => p.length > 0);
+
+  // Fallback: plain paragraph style
+  if (socialPosts.length <= 1) {
+    socialPosts = cleaned
+      .split(/\n\s*\n+/)
+      .map((p: string) => p.trim())
+      .filter(
+        (p: string) =>
+          p.length > 30 &&
+          !/^here is/i.test(p) &&
+          !/^[*]+$/.test(p)
+      );
+  }
+
+  nextSocial = socialPosts;
+}
+
+if (section === "email") {
+  nextEmail = updated
+    .replace(/Here is the regenerated email section:\s*/i, "")
+    .replace(/^#\s*Email\s*/i, "")
+    .replace(/\*\*/g, "")
+    .replace(/^Subject Line:\s*/im, "Subject: ")
+    .replace(/^Body:\s*/im, "")
+    .trim();
+}
+        const rebuilt = [
+          "# Blog",
+          nextBlog || "",
+          "",
+          "# Social",
+          Array.isArray(nextSocial) ? nextSocial.join("\n\n") : "",
+          "",
+          "# Email",
+          nextEmail || "",
+        ].join("\n");
+
+        return {
+          ...prev,
+          finalContent: rebuilt,
+          logs: [
+            ...prev.logs,
+            {
+              message: `${section} regenerated`,
+              time: new Date().toLocaleTimeString(),
+            },
+          ],
+        };
+      });
+
+      setApprovedSections((prev) => ({
+        ...prev,
+        [section]: false,
+      }));
+
+      showToast(`${section} regenerated ✨`, "success");
+    } catch (err: any) {
+      console.error(err);
+      showToast(err.message || "Regeneration failed", "error");
+    } finally {
+      setLoading(false);
+    }
+  },
+  [data.factSheet, lastTone, showToast]
+);
  const handleGenerate = useCallback(
   async (content: string, tone: string) => {
     setData({
@@ -216,6 +349,11 @@ export default function Dashboard() {
       finalContent: "",
       logs: [],
     });
+    setApprovedSections({
+  blog: false,
+  social: false,
+  email: false,
+});
     setShowModal(false);
     setLastContent(content);
     setLastTone(tone);
@@ -362,11 +500,11 @@ export default function Dashboard() {
         <div className={`transition-all duration-500 ${contentVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
           
           {loading && (
-  <>
-    <AgentRoom logs={data?.logs || []} />
-    <LogsSection logs={data?.logs || []} loading={loading} />
-  </>
-)}
+            <>
+              <AgentRoom logs={data?.logs} />
+              <LogsSection logs={data?.logs} loading={loading} />
+            </>
+          )}
 
           {!loading && (
             <>
@@ -379,9 +517,12 @@ export default function Dashboard() {
                 activeSection === "email") && (
                 <ContentSection
                   activeTab={activeSection}
-                  onTabChange={setActiveSection}
+                  onTabChange={(tab) => setActiveSection(tab)}
                   content={parsedContent}
                   loading={loading}
+                  onApprove={(section) => handleApproveSection(section)}
+                  onRegenerate={(section) => handleRegenerateSection(section)}
+                  approvedSections={approvedSections}
                 />
               )}
 

@@ -6,6 +6,7 @@ import { createRequire } from "module";
 import { researchAgent } from "../agents/researcher.js";
 import { writerAgent } from "../agents/writer.js";
 import { editorAgent } from "../agents/editor.js";
+import {regenerateSectionAgent} from "../agents/writer.js";
 
 const require = createRequire(import.meta.url);
 const pdf = require("pdf-parse");
@@ -157,6 +158,26 @@ router.post("/start-stream", upload.single("file"), async (req, res) => {
     console.error(err);
     res.write(`data: ${JSON.stringify({ type: "error", message: err.message })}\n\n`);
     res.end();
+  }
+});
+router.post("/regenerate-section", async (req, res) => {
+  try {
+    const { section, factSheet, tone } = req.body;
+
+    if (!section || !factSheet) {
+      return res.status(400).json({ error: "Missing section or factSheet" });
+    }
+
+    const updatedSection = await regenerateSectionAgent(
+      section,
+      JSON.stringify(factSheet),
+      tone || "professional"
+    );
+
+    res.json({ section, updatedSection });
+  } catch (err) {
+    console.error("REGENERATE_SECTION_ROUTE_ERROR:", err);
+    res.status(500).json({ error: err.message || "Failed to regenerate section" });
   }
 });
 
