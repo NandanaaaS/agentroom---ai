@@ -11,24 +11,84 @@ export async function researchAgent(content) {
         messages: [
           {
             role: "system",
-            content: `You are a data extraction specialist. Output ONLY a flat JSON object.
-            ### RULES:
-            1. **Price**: If you see "units sold", "reviews", or "recommendations", IGNORE those numbers. 
-            2. **Price**: Only extract a price if it is clearly a retail cost (usually has $, ₹, £, or says "Price:").
-            3. **Price**: If no retail price is found, set "price": "Not provided".
-            4. **Brief**: Keep 'features' as a simple array of strings. Do not truncate.
-            5. **Value Proposition**: Identify the SINGLE most important selling point of the product from the text.
-            6. **Ambiguities**: Identify unclear or missing information that could confuse a buyer.
+            content: `You are a strict data extraction and normalization engine.
 
-            ### OUTPUT FORMAT:
-            {
-              "product_name": "Name",
-              "features": ["feature 1", "feature 2"],
-              "price": "Symbol + Value or Not provided",
-              "target_audience": "Audience",
-              "value_proposition": "Main selling point derived from input",
-              "ambiguities": ["unclear point 1", "unclear point 2"]
-            }`
+You MUST follow ALL rules exactly. Do NOT ignore any rule.
+
+### RULES:
+
+1. PRICE:
+- Ignore numbers related to reviews, ratings, or units sold.
+- Extract ONLY real retail price (₹, $, £).
+- If missing → "Not provided".
+
+2. TARGET AUDIENCE:
+- If not explicitly mentioned, infer logically (e.g., kitchen product → "Home cooks").
+- NEVER return "Not specified".
+
+3. FEATURES (CRITICAL - DO NOT DROP DATA):
+
+STEP 1: Extract ALL features from input.
+STEP 2: Clean and normalize them.
+
+STRICT RULES:
+- DO NOT reduce number of features unnecessarily
+- Keep ALL meaningful features
+- Each feature max 6–8 words
+- Use sentence case (no ALL CAPS)
+
+- Fix OCR typos:
+  - IOOW → 100W
+  - 10OW → 100W
+
+- Merge broken lines into ONE feature
+
+- Convert combined info:
+  - "Color: Black/Grey/Blue" → "Available in multiple colors"
+
+- REMOVE non-features:
+  - Marketing phrases ("perfect for...", "best for...")
+  - Generic fluff ("long-lasting performance")
+  - Social proof (reviews, ratings, units sold)
+  - Claims that are flagged as ambiguous
+
+- KEEP only real features:
+  → specs, capabilities, attributes (motor, blades, speeds, warranty, etc.)
+
+4. VALUE PROPOSITION:
+- Must be benefit-driven (NOT a feature)
+- Must be broad and safe
+- DO NOT include extreme/specific claims
+- Example: "Fast and effortless food preparation"
+
+5. AMBIGUITIES:
+
+ONLY include:
+- Missing critical info (e.g., price)
+- Unrealistic or suspicious claims
+
+STRICTLY DO NOT include:
+- Units sold
+- Reviews or ratings
+- Popularity or social proof
+- Marketing fluff
+
+These must be completely ignored.
+
+6. OUTPUT:
+- Return ONLY valid JSON
+- No explanation
+- No markdown
+
+### OUTPUT FORMAT:
+{
+  "product_name": "Name",
+  "features": ["feature 1", "feature 2"],
+  "price": "Symbol + Value or Not provided",
+  "target_audience": "Audience",
+  "value_proposition": "Main benefit",
+  "ambiguities": ["issue 1", "issue 2"]
+}`
           },
           {
             role: "user",

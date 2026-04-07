@@ -25,6 +25,8 @@ interface FactSheetProps {
     features: string[];
     price: string;
     target_audience: string;
+    value_proposition?: string;
+    ambiguities?: string[];
   };
   loading: boolean;
 }
@@ -116,6 +118,37 @@ export default function FactSheetSection({ data, loading }: FactSheetProps) {
           ))}
         </div>
       </div>
+            {/* VALUE PROPOSITION */}
+      {data.value_proposition && (
+        <div className="rounded-2xl dark:bg-gray-900 bg-white border dark:border-gray-800 border-slate-200 p-6">
+          <p className="text-[11px] uppercase tracking-[0.15em] font-semibold mb-3 text-gray-500 dark:text-gray-400">
+            Value Proposition
+          </p>
+          <p className="text-lg font-semibold text-indigo-500 leading-relaxed">
+            {data.value_proposition}
+          </p>
+        </div>
+      )}
+
+      {/* AMBIGUITIES */}
+      {data.ambiguities && data.ambiguities.length > 0 && (
+        <div className="rounded-2xl bg-rose-500/5 border border-rose-500/20 p-6">
+          <p className="text-[11px] uppercase tracking-[0.15em] font-semibold mb-4 text-rose-400">
+            Ambiguities / Missing Info
+          </p>
+
+          <ul className="space-y-2">
+            {data.ambiguities.map((item, i) => (
+              <li
+                key={i}
+                className="text-sm text-rose-300 bg-rose-500/10 px-3 py-2 rounded-lg border border-rose-500/10"
+              >
+                ⚠ {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

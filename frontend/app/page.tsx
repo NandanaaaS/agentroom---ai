@@ -17,6 +17,8 @@ export interface ApiResponse {
     features: string[];
     price: string;
     target_audience: string;
+    value_proposition?: string;
+    ambiguities?: string[];
   };
   finalContent: string;
   logs: { message: string; time: string }[];
