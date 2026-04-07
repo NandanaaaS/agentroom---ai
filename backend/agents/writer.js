@@ -64,3 +64,65 @@ Begin your response now.`;
     throw new Error("The Copywriter Agent failed.");
   }
 }
+export async function regenerateSectionAgent(section, factSheet, tone, fix = "") {
+  const systemPrompt = `You are a world-class Marketing Copywriter.
+You are regenerating ONLY ONE section of a campaign kit.
+
+Valid sections:
+- blog
+- social
+- email
+
+Rules:
+- Return ONLY the requested section content.
+- Do NOT include the other sections.
+- If section is "social", return EXACTLY 5 posts labeled "Post 1:" to "Post 5:".
+- If section is "email", return Subject Line and Body.
+- If price is "Not provided", write "Contact for pricing."
+- You MUST highlight the "value_proposition" from the fact sheet strongly.
+- Follow the fix instructions if provided.`;
+
+  const userPrompt = `
+SECTION TO REGENERATE:
+${section}
+
+FACT SHEET:
+${factSheet}
+
+TONE:
+${tone}
+
+FIX INSTRUCTIONS:
+${fix || "None"}
+
+Generate the ${section} section now.
+`;
+
+  try {
+    const response = await axios.post(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        model: "meta-llama/llama-3-8b-instruct",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt }
+        ],
+        max_tokens: 1000,
+        temperature: 0.7,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "http://localhost:3000",
+          "X-Title": "AgentRoom AI"
+        },
+      }
+    );
+
+    return response.data.choices[0].message.content;
+  } catch (err) {
+    console.error("REGENERATE_SECTION_ERROR:", err.message);
+    throw new Error("Section regeneration failed.");
+  }
+}
