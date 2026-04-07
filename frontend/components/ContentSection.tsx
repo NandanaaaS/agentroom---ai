@@ -1,3 +1,4 @@
+// frontend/components/ContentSection.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -24,6 +25,7 @@ function SkeletonPulse({ className }: { className: string }) {
 export default function ContentSection({ activeTab, onTabChange, content, loading }: ContentSectionProps) {
   const [mounted, setMounted] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [viewMode, setViewMode] = useState<"desktop" | "mobile">("desktop");
 
   useEffect(() => {
     setMounted(false);
@@ -36,102 +38,141 @@ export default function ContentSection({ activeTab, onTabChange, content, loadin
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+  const handleDownload = () => {
+  const blob = new Blob([content?.blog || ""], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "content.txt";
+  a.click();
+};
+
+  const ReviewActions = () => (
+    <div className="mt-8 flex items-center justify-between border-t dark:border-gray-800 border-slate-100 pt-6">
+      <p className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest">Human Review Required</p>
+      <div className="flex gap-2">
+        <button className="px-4 py-2 rounded-xl text-xs font-bold border border-slate-200 dark:border-gray-700 hover:bg-slate-50 dark:hover:bg-gray-800 transition-all text-slate-600 dark:text-gray-300">
+          REGENERATE
+        </button>
+        <button className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500 text-white hover:bg-emerald-600 shadow-lg shadow-emerald-500/20 transition-all">
+          APPROVE
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
-      {/* Tabs Header */}
-      <div className="flex gap-1 p-1 rounded-2xl dark:bg-gray-900 bg-white border dark:border-gray-800">
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => onTabChange(tab.id)}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-              activeTab === tab.id 
-                ? "bg-amber-500 text-white shadow-lg shadow-amber-500/20" 
-                : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-            }`}
-          >
-            <span>{tab.icon}</span>
-            {tab.label}
-          </button>
-        ))}
+      <div className="flex flex-col sm:flex-row gap-4 justify-between items-end sm:items-center">
+        {/* Tabs Header */}
+        <div className="flex gap-1 p-1.5 rounded-2xl dark:bg-gray-900 bg-slate-100 border dark:border-gray-800 border-slate-200 w-full sm:w-auto">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => onTabChange(tab.id)}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                activeTab === tab.id 
+                  ? "bg-amber-500 text-white shadow-lg shadow-amber-500/20" 
+                  : "text-slate-500 hover:text-slate-800 dark:text-gray-400 dark:hover:text-gray-200"
+              }`}
+            >
+              <span>{tab.icon}</span>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* View Mode Toggle */}
+        <div className="flex bg-slate-100 dark:bg-gray-900 rounded-xl p-1 border dark:border-gray-800 border-slate-200">
+          <button 
+            onClick={() => setViewMode("desktop")}
+            className={`px-3 py-1.5 text-[10px] font-bold rounded-lg transition-all ${viewMode === "desktop" ? "bg-white dark:bg-gray-800 shadow-sm text-amber-600" : "text-slate-400"}`}
+          >DESKTOP</button>
+          <button 
+            onClick={() => setViewMode("mobile")}
+            className={`px-3 py-1.5 text-[10px] font-bold rounded-lg transition-all ${viewMode === "mobile" ? "bg-white dark:bg-gray-800 shadow-sm text-amber-600" : "text-slate-400"}`}
+          >MOBILE</button>
+        </div>
       </div>
 
-      <div className={`transition-all duration-300 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
-        {loading ? (
-          <div className="space-y-4">
-            {[0, 1, 2].map((i) => (
-              <SkeletonPulse key={i} className={i === 0 ? "h-48 w-full" : "h-28 w-full"} />
-            ))}
-          </div>
-        ) : !content || (!content.blog && content.social.length === 0) ? (
-          <div className="py-20 text-center border-2 border-dashed dark:border-gray-800 rounded-3xl opacity-40">
-            <p className="text-sm text-slate-500">Content sections could not be parsed. Check the logs for full output.</p>
-          </div>
-        ) : (
-          <div className="relative rounded-2xl border dark:border-gray-800 dark:bg-gray-900/30 bg-white p-6 shadow-sm">
-            
-            {/* Action Buttons (Copy) */}
-            <div className="absolute top-4 right-4 z-10">
-                <button 
-                  onClick={() => {
-                    const textToCopy = activeTab === 'blog' ? content.blog : 
-                                     activeTab === 'email' ? content.email : 
-                                     content.social.join('\n\n');
-                    handleCopy(textToCopy);
-                  }}
-                  className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-[10px] font-bold uppercase tracking-wider hover:bg-amber-500 hover:text-white transition-all border dark:border-gray-700"
-                >
-                  {copied ? "✓ Copied" : "📋 Copy Section"}
-                </button>
+      <div className={`transition-all duration-500 mx-auto ${
+        viewMode === "mobile" 
+          ? "max-w-[375px] border-[12px] border-slate-900 dark:border-black rounded-[3rem] shadow-2xl h-[650px] overflow-y-auto bg-white dark:bg-gray-950 p-2" 
+          : "max-w-full"
+      }`}>
+        <div className={`transition-all duration-300 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
+          {loading ? (
+            <div className="space-y-4">
+              {[0, 1, 2].map((i) => (
+                <SkeletonPulse key={i} className={i === 0 ? "h-48 w-full" : "h-28 w-full"} />
+              ))}
             </div>
-
-            {/* Blog Section */}
-            {activeTab === "blog" && (
-              <div className="prose dark:prose-invert max-w-none prose-sm sm:prose-base">
-                <div className="dark:text-gray-200 text-slate-700 leading-relaxed">
-                  <ReactMarkdown>{content.blog || ""}</ReactMarkdown>
-                </div>
-              </div>
-            )}
-
-            {/* Social Posts Section - Card Style */}
-            {activeTab === "social" && (
-              <div className="space-y-4 pt-8">
-                {content.social.map((post, i) => (
-                  <div 
-                    key={i} 
-                    className="group p-5 rounded-2xl border dark:border-gray-800 dark:bg-gray-900/50 bg-slate-50 transition-all hover:border-amber-500/50"
+          ) : !content || (!content.blog && content.social.length === 0) ? (
+            <div className="py-20 text-center border-2 border-dashed dark:border-gray-800 border-slate-200 rounded-3xl opacity-60">
+              <p className="text-sm text-slate-500 dark:text-gray-400">Content sections could not be parsed.</p>
+            </div>
+          ) : (
+            <div className={`relative rounded-2xl p-6 ${viewMode === 'mobile' ? '' : 'border dark:border-gray-800 border-slate-200 dark:bg-gray-900/30 bg-white shadow-sm'}`}>
+              
+              <div className="absolute top-4 right-4 z-10">
+                  <button 
+                    onClick={() => {
+                      const textToCopy = activeTab === 'blog' ? content.blog : 
+                                       activeTab === 'email' ? content.email : 
+                                       content.social.join('\n\n');
+                      handleCopy(textToCopy);
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-gray-800 text-[10px] font-bold uppercase tracking-wider hover:bg-amber-500 hover:text-white transition-all border border-slate-200 dark:border-gray-700 text-slate-600 dark:text-gray-400"
                   >
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="w-6 h-6 rounded-full bg-amber-500/10 flex items-center justify-center text-[10px] text-amber-500 font-bold border border-amber-500/20">
-                        {i + 1}
-                      </div>
-                      <span className="text-[11px] font-bold uppercase tracking-wider dark:text-gray-400 text-slate-500">
-                        Post {i + 1}
-                      </span>
-                    </div>
-                    <div className="text-sm leading-relaxed dark:text-gray-200 text-slate-700">
-                      <ReactMarkdown>{post}</ReactMarkdown>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                    {copied ? "✓ Copied" : "📋 Copy"}
+                  </button>
+                  <button
+                    onClick={handleDownload}
+                    className="ml-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-gray-800 text-[10px] font-bold uppercase tracking-wider hover:bg-emerald-500 hover:text-white transition-all border border-slate-200 dark:border-gray-700 text-slate-600 dark:text-gray-400"
+                  >
+                    📥 Download
+                  </button>
 
-            {/* Email Section */}
-            {activeTab === "email" && (
-              <div className="relative pt-10">
-                 <div className="absolute top-0 left-0 px-2 py-0.5 bg-blue-500/10 text-blue-500 text-[10px] font-bold rounded uppercase border border-blue-500/20">
-                    Draft Teaser
-                 </div>
-                 <div className="leading-relaxed dark:text-gray-100 text-slate-800 font-mono text-sm pt-2">
-                    <ReactMarkdown>{content.email || ""}</ReactMarkdown>
-                </div>
               </div>
-            )}
-          </div>
-        )}
+
+              {activeTab === "blog" && (
+                <div className="prose dark:prose-invert max-w-none prose-sm sm:prose-base prose-headings:text-slate-900 dark:prose-headings:text-white prose-p:text-slate-700 dark:prose-p:text-gray-300">
+                    <ReactMarkdown>{content.blog || ""}</ReactMarkdown>
+                    <ReviewActions />
+                </div>
+              )}
+
+              {activeTab === "social" && (
+                <div className="space-y-4 pt-8">
+                  {content.social.map((post, i) => (
+                    <div key={i} className="group p-5 rounded-2xl border dark:border-gray-800 border-slate-100 dark:bg-gray-900/50 bg-slate-50/50 transition-all hover:border-amber-500/50">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-6 h-6 rounded-full bg-amber-500/10 flex items-center justify-center text-[10px] text-amber-500 font-bold border border-amber-500/20">
+                          {i + 1}
+                        </div>
+                        <span className="text-[11px] font-bold uppercase tracking-wider dark:text-gray-400 text-slate-500">Post {i + 1}</span>
+                      </div>
+                      <div className="text-sm leading-relaxed dark:text-gray-200 text-slate-800 font-medium">
+                        <ReactMarkdown>{post}</ReactMarkdown>
+                      </div>
+                    </div>
+                  ))}
+                  <ReviewActions />
+                </div>
+              )}
+
+              {activeTab === "email" && (
+                <div className="relative pt-10">
+                    <div className="absolute top-0 left-0 px-2 py-0.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[10px] font-bold rounded uppercase border border-blue-500/20">Draft Teaser</div>
+                    <div className="leading-relaxed dark:text-gray-100 text-slate-900 font-mono text-sm pt-2 prose prose-sm max-w-none">
+                      <ReactMarkdown>{content.email || ""}</ReactMarkdown>
+                    </div>
+                    <ReviewActions />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
