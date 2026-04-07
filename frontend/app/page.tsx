@@ -259,10 +259,14 @@ export default function Dashboard() {
 
             const time = new Date().toLocaleTimeString();
 
-            setData((prev: any) => ({
+            setData((prev: any) => {
+            const newLogs = [...(prev.logs || []), { message, time }];
+
+            return {
               ...prev,
-              logs: [...prev.logs, {message, time}],
-            }));
+              logs: newLogs,
+            };
+          });
           }
 
           if (json.type === "factsheet") {

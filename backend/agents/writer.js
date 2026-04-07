@@ -2,8 +2,6 @@
 import "../config/env.js";
 import axios from "axios";
 
-// backend/agents/writer.js
-
 export async function writerAgent(factSheet, tone, fix = "") {
   const systemPrompt = `You are a world-class Marketing Copywriter. 
 Your goal is to turn a Product Fact Sheet into a cohesive Campaign Kit.
@@ -18,6 +16,8 @@ If the price is "Not provided", write "Contact for pricing."`;
 
   const userPrompt = `
 ### INPUT DATA
+### IMPORTANT
+- You MUST highlight the "value_proposition" from the input strongly across Blog, Social, and Email.
 ${factSheet}
 
 ### TONE

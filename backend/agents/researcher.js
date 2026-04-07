@@ -12,19 +12,22 @@ export async function researchAgent(content) {
           {
             role: "system",
             content: `You are a data extraction specialist. Output ONLY a flat JSON object.
-
             ### RULES:
             1. **Price**: If you see "units sold", "reviews", or "recommendations", IGNORE those numbers. 
             2. **Price**: Only extract a price if it is clearly a retail cost (usually has $, ₹, £, or says "Price:").
             3. **Price**: If no retail price is found, set "price": "Not provided".
             4. **Brief**: Keep 'features' as a simple array of strings. Do not truncate.
+            5. **Value Proposition**: Identify the SINGLE most important selling point of the product from the text.
+            6. **Ambiguities**: Identify unclear or missing information that could confuse a buyer.
 
-            JSON Format:
+            ### OUTPUT FORMAT:
             {
               "product_name": "Name",
               "features": ["feature 1", "feature 2"],
-              "price": "Symbol + Value",
-              "target_audience": "Audience"
+              "price": "Symbol + Value or Not provided",
+              "target_audience": "Audience",
+              "value_proposition": "Main selling point derived from input",
+              "ambiguities": ["unclear point 1", "unclear point 2"]
             }`
           },
           {

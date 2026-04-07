@@ -4,16 +4,22 @@ import axios from "axios";
 
 export async function editorAgent(draft, factSheet) {
   const prompt = `
-Compare content with fact sheet.
-If ANY mismatch → REJECT.
-Return STRICT JSON:
-{
- "status": "APPROVED or REJECTED",
- "issues": [],
- "fix_instructions": ""
-}
+  Compare content with fact sheet.
 
-NO explanation.
+  ### STRICT RULES:
+  1. If ANY feature, price, or audience is incorrect → REJECT.
+  2. If content invents information not in fact sheet → REJECT.
+  3. Blog must be detailed (not too short).
+  4. Social must have EXACTLY 5 posts.
+  5. Email must contain Subject + Body.
+  6. Reject if content is overly repetitive or robotic.
+
+  ### OUTPUT FORMAT (STRICT JSON ONLY):
+  {
+  "status": "APPROVED or REJECTED",
+  "issues": ["list of problems"],
+  "fix_instructions": "clear instructions to fix issues"
+  }
 
 Fact Sheet:
 ${factSheet}

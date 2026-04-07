@@ -22,7 +22,8 @@ export async function runCampaign(content, tone) {
   logs.push("Copywriter generating content...");
 
   let draft = await writerAgent(JSON.stringify(factSheet), tone);
-    let attempts = 0;
+  let review;  
+  let attempts = 0;
     const MAX_ATTEMPTS = 4;
 
     while (attempts < MAX_ATTEMPTS) {
