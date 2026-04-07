@@ -1,3 +1,4 @@
+// frontend/components/FactSheetSection.tsx
 "use client";
 
 import { useEffect, useState } from "react";

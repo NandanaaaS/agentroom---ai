@@ -1,3 +1,4 @@
+//backend/agents/orchestrator.js
 import "../config/env.js";
 import { researchAgent } from "./researcher.js";
 import { writerAgent } from "./writer.js";
@@ -21,27 +22,36 @@ export async function runCampaign(content, tone) {
   logs.push("Copywriter generating content...");
 
   let draft = await writerAgent(JSON.stringify(factSheet), tone);
+    let attempts = 0;
+    const MAX_ATTEMPTS = 4;
 
-  let review = await editorAgent(draft, JSON.stringify(factSheet));
+    while (attempts < MAX_ATTEMPTS) {
+        logs.push(`🔁 Attempt ${attempts + 1}/${MAX_ATTEMPTS}`);
+      review = await editorAgent(draft, JSON.stringify(factSheet));
 
-  let attempts = 0;
+      if (review.status === "APPROVED") {
+        logs.push("✅ Editor approved content");
+        break;
+      }
 
-  while (review.status === "REJECTED" && attempts < 2) {
-    logs.push("Editor rejected: " + review.issues.join(", "));
-    logs.push("Copywriter fixing content...");
+      logs.push("❌ Editor rejected: " + review.issues.join(", "));
+      logs.push("🔧 Fixing content based on feedback...");
 
-    draft = await writerAgent(
-      JSON.stringify(factSheet),
-      tone,
-      review.fix_instructions
-    );
+      draft = await writerAgent(
+        JSON.stringify(factSheet),
+        tone,
+        review.fix_instructions
+      );
 
-    review = await editorAgent(draft, JSON.stringify(factSheet));
-
-    attempts++;
+      attempts++;
+    }
+  if (review.status==="APPROVED"){
+    logs.push("Final content approved");
   }
-
-  logs.push("Final content approved");
+  else{
+    logs.push("⚠️ Max attempts reached. Using best version.");
+  }
+  
 
   return {
     factSheet,

@@ -1,3 +1,4 @@
+// frontend/components/Header.tsx
 "use client";
 
 interface HeaderProps {

@@ -1,3 +1,4 @@
+// frontend/components/SideBar.tsx
 "use client";
 
 import { Section } from "@/app/page";

@@ -19,7 +19,7 @@ export interface ApiResponse {
     target_audience: string;
   };
   finalContent: string;
-  logs: string[];
+  logs: { message: string; time: string }[];
 }
 
 const TONE_OPTIONS = [
@@ -182,8 +182,11 @@ export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [data, setData] = useState<ApiResponse | null>(null);
-  
+  const [data, setData] = useState<ApiResponse>({
+    factSheet: null as any,
+    finalContent: "",
+    logs: [],
+  });  
   const [loading, setLoading] = useState(false);
   const [contentVisible, setContentVisible] = useState(true);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
@@ -206,11 +209,17 @@ export default function Dashboard() {
 
  const handleGenerate = useCallback(
   async (content: string, tone: string) => {
+    setData({
+      factSheet: null as any,
+      finalContent: "",
+      logs: [],
+    });
     setShowModal(false);
     setLastContent(content);
     setLastTone(tone);
     setLoading(true);
-    setContentVisible(false);
+    //setContentVisible(false);
+    setActiveSection("logs");
 
     try {
       const formData = new FormData();
@@ -230,8 +239,6 @@ export default function Dashboard() {
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
-
-      let logs: string[] = [];
       let factSheet: any = null;
       let finalContent = "";
 
@@ -248,10 +255,13 @@ export default function Dashboard() {
           const json = JSON.parse(line.replace("data:", "").trim());
 
           if (json.type === "log") {
-            logs.push(json.message);
+            const message = json.message || "Processing step...";
+
+            const time = new Date().toLocaleTimeString();
+
             setData((prev: any) => ({
               ...prev,
-              logs: [...logs],
+              logs: [...prev.logs, {message, time}],
             }));
           }
 
@@ -260,28 +270,30 @@ export default function Dashboard() {
             setData((prev: any) => ({
               ...prev,
               factSheet,
+              finalContent
             }));
+            setActiveSection("factsheet");
           }
 
           if (json.type === "draft") {
             setData((prev: any) => ({
               ...prev,
-              finalContent: json.data,
-              logs: [...logs],
-              factSheet,
+              finalContent: (prev?.finalContent || "") + json.data,
+              logs: prev?.logs || [],
+              factSheet: prev?.factSheet || factSheet,
             }));
           }
 
           if (json.type === "final") {
             finalContent = json.data;
-            setData({
+            setData((prev: any) => ({
+              ...prev,
               factSheet,
               finalContent,
-              logs,
-            });
+            }));
 
             setLoading(false);
-            setContentVisible(true);
+            //setContentVisible(true);
             showToast("Campaign generated 🚀", "success");
           }
 
@@ -301,46 +313,96 @@ export default function Dashboard() {
 );
 
   return (
-    <div className={`min-h-screen flex font-sans transition-colors duration-500 ${darkMode ? "dark bg-gray-950" : "bg-slate-50"}`}>
-      {sidebarOpen && <div className="fixed inset-0 z-20 bg-black/60 backdrop-blur-sm lg:hidden" onClick={() => setSidebarOpen(false)} />}
+  <div className={`min-h-screen flex font-sans transition-colors duration-500 ${darkMode ? "dark bg-gray-950" : "bg-slate-50"}`}>
+    
+    {sidebarOpen && (
+      <div
+        className="fixed inset-0 z-20 bg-black/60 backdrop-blur-sm lg:hidden"
+        onClick={() => setSidebarOpen(false)}
+      />
+    )}
 
-      <Sidebar activeSection={activeSection} onSectionChange={(s) => { setActiveSection(s); setSidebarOpen(false); }} isOpen={sidebarOpen} darkMode={darkMode} />
+    <Sidebar
+      activeSection={activeSection}
+      onSectionChange={(s) => {
+        setActiveSection(s);
+        setSidebarOpen(false);
+      }}
+      isOpen={sidebarOpen}
+      darkMode={darkMode}
+    />
 
-      <div className="flex-1 flex flex-col min-h-screen lg:ml-64">
-        <Header darkMode={darkMode} onToggleDark={() => setDarkMode(!darkMode)} onMenuOpen={() => setSidebarOpen(true)} onRegenerate={() => setShowModal(true)} loading={loading} />
+    <div className="flex-1 flex flex-col min-h-screen lg:ml-64">
+      <Header
+        darkMode={darkMode}
+        onToggleDark={() => setDarkMode(!darkMode)}
+        onMenuOpen={() => setSidebarOpen(true)}
+        onRegenerate={() => setShowModal(true)}
+        loading={loading}
+      />
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-5xl w-full mx-auto">
-          <InputPanel
-            content={lastContent}
-            tone={lastTone}
-            setContent={setLastContent}
-            setTone={setLastTone}
-            onGenerate={() => handleGenerate(lastContent, lastTone)}
-            darkMode={darkMode}
-            selectedFile={selectedFile}
-            setSelectedFile={setSelectedFile}
-          />
+      <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-5xl w-full mx-auto">
+        <InputPanel
+          content={lastContent}
+          tone={lastTone}
+          setContent={setLastContent}
+          setTone={setLastTone}
+          onGenerate={() => handleGenerate(lastContent, lastTone)}
+          darkMode={darkMode}
+          selectedFile={selectedFile}
+          setSelectedFile={setSelectedFile}
+        />
 
-          <div className={`transition-all duration-500 ${contentVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
-            {!data && !loading ? (
-               <div className="py-20 text-center opacity-30">
-                  <p className="text-xl font-medium text-slate-600 dark:text-slate-400">Input product details or upload a source file to begin</p>
-               </div>
-            ) : (
-              <>
-                {activeSection === "factsheet" && <FactSheetSection data={data?.factSheet} loading={loading} />}
-                {(activeSection === "blog" || activeSection === "social" || activeSection === "email") && (
-                  <ContentSection activeTab={activeSection} onTabChange={setActiveSection} content={parsedContent} loading={loading} />
-                )}
-                {activeSection === "logs" && <LogsSection logs={data?.logs} loading={loading} />}
-              </>
-            )}
-          </div>
-        </main>
-      </div>
+        <div className={`transition-all duration-500 ${contentVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
+          
+          {loading && (
+            <LogsSection logs={data?.logs} loading={loading} />
+          )}
 
-      {showModal && <InputModal darkMode={darkMode} initialContent={lastContent} initialTone={lastTone} onClose={() => setShowModal(false)} onSubmit={handleGenerate} />}
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+          {!loading && (
+            <>
+              {activeSection === "factsheet" && (
+                <FactSheetSection data={data?.factSheet} loading={loading} />
+              )}
+
+              {(activeSection === "blog" ||
+                activeSection === "social" ||
+                activeSection === "email") && (
+                <ContentSection
+                  activeTab={activeSection}
+                  onTabChange={setActiveSection}
+                  content={parsedContent}
+                  loading={loading}
+                />
+              )}
+
+              {activeSection === "logs" && (
+                <LogsSection logs={data?.logs} loading={loading} />
+              )}
+            </>
+          )}
+        </div>
+      </main>
     </div>
-  );
+
+    {/* ✅ MODAL + TOAST INSIDE ROOT */}
+    {showModal && (
+      <InputModal
+        darkMode={darkMode}
+        initialContent={lastContent}
+        initialTone={lastTone}
+        onClose={() => setShowModal(false)}
+        onSubmit={handleGenerate}
+      />
+    )}
+
+    {toast && (
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast(null)}
+      />
+    )}
+  </div>
+);
 }

@@ -1,3 +1,5 @@
+// frontend/lib/parseContent.ts
+
 export interface ContentData {
   blog: string;
   social: string[];

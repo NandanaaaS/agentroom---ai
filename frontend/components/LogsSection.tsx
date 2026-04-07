@@ -1,9 +1,10 @@
+// frontend/components/LogsSection.tsx
 "use client";
 
 import { useEffect, useRef } from "react";
 
 interface LogsSectionProps {
-  logs?: string[];
+  logs: { message: string; time: string }[];
   loading: boolean;
 }
 
@@ -13,10 +14,12 @@ function SkeletonPulse({ className }: { className: string }) {
 
 const LOG_ICONS: Record<number, string> = {};
 
-function getLogStyle(log: string, index: number, total: number) {
+function getLogStyle(log: string | undefined, index: number, total: number) {
+  const safeLog = log || "";
+
   const isLast = index === total - 1;
-  const isApproved = log.toLowerCase().includes("approved") || log.toLowerCase().includes("final");
-  const isError = log.toLowerCase().includes("error") || log.toLowerCase().includes("failed");
+  const isApproved = safeLog.toLowerCase().includes("approved") || safeLog.toLowerCase().includes("final");
+  const isError = safeLog.toLowerCase().includes("error") || safeLog.toLowerCase().includes("failed");
 
   if (isError) return { dot: "bg-rose-500", text: "dark:text-rose-400 text-rose-600", label: "Error" };
   if (isApproved) return { dot: "bg-emerald-500", text: "dark:text-emerald-400 text-emerald-600", label: "Done" };
@@ -64,7 +67,7 @@ export default function LogsSection({ logs, loading }: LogsSectionProps) {
 
         {/* Log content */}
         <div className="h-[420px] overflow-y-auto p-5 space-y-1 scroll-smooth font-mono text-sm">
-          {loading || !logs ? (
+          {loading && (!logs || logs.length === 0) ? (
             <div className="space-y-3 pt-2">
               {[0,1,2,3,4].map(i => (
                 <div key={i} className="flex items-center gap-3">
@@ -76,16 +79,12 @@ export default function LogsSection({ logs, loading }: LogsSectionProps) {
           ) : (
             <>
               {logs.map((log, i) => {
-                const { dot, text, label } = getLogStyle(log, i, logs.length);
+                const { dot, text, label } = getLogStyle(log?.message, i, logs.length);
+
                 return (
-                  <div
-                    key={i}
-                    className="flex items-start gap-3 py-2.5 px-3 rounded-lg dark:hover:bg-gray-800/60 hover:bg-slate-50 transition-colors duration-150 group"
-                    style={{ animationDelay: `${i * 50}ms` }}
-                  >
-                    {/* Timeline line */}
+                  <div key={i} className="flex items-start gap-3 py-2.5 px-3 rounded-lg">
                     <div className="flex flex-col items-center flex-shrink-0 mt-1">
-                      <div className={`w-2 h-2 rounded-full ${dot} shadow-sm`} />
+                      <div className={`w-2 h-2 rounded-full ${dot}`} />
                       {i < logs.length - 1 && (
                         <div className="w-px h-6 dark:bg-gray-700 bg-slate-200 mt-1" />
                       )}
@@ -93,15 +92,18 @@ export default function LogsSection({ logs, loading }: LogsSectionProps) {
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
-                        <span className={`text-[10px] font-bold uppercase tracking-wider ${text} opacity-70`}>
+                        <span className={`text-[10px] font-bold uppercase ${text}`}>
                           {label}
                         </span>
-                        <span className="text-[10px] dark:text-gray-600 text-slate-400">
-                          T+{(i * 0.8).toFixed(1)}s
+
+                        {/* ✅ REAL TIME HERE */}
+                        <span className="text-[10px] opacity-60">
+                          {log.time}
                         </span>
                       </div>
-                      <p className={`text-xs leading-relaxed ${text}`}>
-                        {log}
+
+                      <p className={`text-xs ${text}`}>
+                        {log.message || "Processing..."}
                       </p>
                     </div>
                   </div>

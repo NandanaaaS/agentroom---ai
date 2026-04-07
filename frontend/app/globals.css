@@ -1,3 +1,4 @@
+
 @import "tailwindcss";
 
 @layer base {
@@ -8,74 +9,60 @@
   html {
     scroll-behavior: smooth;
   }
+  
   body {
-    @apply bg-slate-50 text-slate-900 transition-colors duration-300;
+    @apply bg-slate-50 text-slate-900 transition-colors duration-500;
   }
 
   .dark body {
-    background-color: #030712; /* This is gray-950 */
-    color: #f3f4f6;            /* This is gray-100 (Bright enough to see!) */
+    background-color: #030712; 
+    color: #f3f4f6;            
   }
 
-  /* Custom scrollbar */
+  /* Custom adaptive scrollbar */
   ::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
-  }
-  ::-webkit-scrollbar-track {
-    background: transparent;
+    width: 6px;
+    height: 6px;
   }
   ::-webkit-scrollbar-thumb {
-    background: #374151;
+    background: #cbd5e1; /* slate-300 for light mode */
     border-radius: 99px;
   }
-  ::-webkit-scrollbar-thumb:hover {
-    background: #4b5563;
-  }
   .dark ::-webkit-scrollbar-thumb {
-    background: #374151;
+    background: #374151; /* gray-700 for dark mode */
   }
 }
 
 @layer utilities {
-  /* Fade in animation for content */
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(8px); }
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  .animate-in {
-    animation: fadeIn 0.4s ease-out both;
-  }
-
-  .fade-in {
-    animation-name: fadeIn;
-  }
-
-  /* Skeleton shimmer */
   @keyframes shimmer {
     0%   { background-position: -200% 0; }
     100% { background-position:  200% 0; }
   }
 
   .animate-pulse {
-  background: linear-gradient(
-    90deg,
-    #1f2937 25%,
-    #374151 50%,
-    #1f2937 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.8s ease-in-out infinite;
-}
+    background: linear-gradient(
+      90deg,
+      #e2e8f0 25%, 
+      #f1f5f9 50%, 
+      #e2e8f0 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.8s ease-in-out infinite;
+    border-radius: 0.75rem;
+  }
 
   .dark .animate-pulse {
-  background: linear-gradient(
-    90deg,
-    #1f2937 25%,
-    #374151 50%,
-    #1f2937 75%
-  );
+    background: linear-gradient(
+      90deg,
+      #1f2937 25%,
+      #374151 50%,
+      #1f2937 75%
+    );
     background-size: 200% 100%;
     animation: shimmer 1.8s ease-in-out infinite;
   }
