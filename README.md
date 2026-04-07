@@ -145,7 +145,7 @@ http://localhost:3000
 
 ## 🎥 Demo
 
-(Add your demo video link here)
+https://drive.google.com/file/d/1rxhqPuvsDOvERlR36SZ9lML1g-dmCmGW/view?usp=drive_link
 
 ---
 
