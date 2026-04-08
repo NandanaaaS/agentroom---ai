@@ -91,10 +91,10 @@ cd frontend
 npm install  
 ```
 Backend:
-
+```
 cd backend  
 npm install  
-
+```
 ---
 
 ## 🔐 Environment Variables
@@ -102,14 +102,14 @@ npm install
 This project uses API keys which are NOT included in the repository for security reasons.
 
 Backend (backend/.env):
-
+```
 OPENROUTER_API_KEY=your_openrouter_key  
-OCR_API_KEY=your_ocr_key  
-
+OCR_API_KEY=your_ocr_key
+```
 Frontend (frontend/.env.local):
-
+```
 NEXT_PUBLIC_API_BASE_URL=http://localhost:5000  
-
+```
 Note:
 - All sensitive API keys are stored only in the backend  
 - The frontend does not expose any secret credentials  
@@ -119,15 +119,15 @@ Note:
 3. Run the Application
 
 Start Backend:
-
+```
 cd backend  
 node server.js  
-
+```
 Start Frontend:
-
+```
 cd frontend  
 npm run dev  
-
+```
 ---
 
 4. Open in Browser
@@ -176,6 +176,4 @@ This project demonstrates a complete end-to-end autonomous content generation pi
 
 - Multi-agent AI architecture  
 - Real-time UI updates  
-- Human-in-the-loop review  
-
-to streamline and automate marketing content creation.
+- Human-in-the-loop review to streamline and automate marketing content creation.
