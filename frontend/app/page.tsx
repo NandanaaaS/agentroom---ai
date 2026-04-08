@@ -40,7 +40,7 @@ interface InputModalProps {
   initialContent: string;
   initialTone: string;
 }
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
 function InputModal({ onSubmit, onClose, darkMode, initialContent, initialTone }: InputModalProps) {
   const [content, setContent] = useState(initialContent);
   const [tone, setTone] = useState(initialTone);
