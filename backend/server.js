@@ -29,6 +29,8 @@ app.use((req, res, next) => {
 // It is already inside your workflow.js, so we don't need it twice.
 app.use("/api/workflow", workFlowRoutes);
 
-app.listen(5000, () => {
-  console.log("Server running on port 5000");
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });

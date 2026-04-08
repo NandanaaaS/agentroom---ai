@@ -40,7 +40,7 @@ interface InputModalProps {
   initialContent: string;
   initialTone: string;
 }
-
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 function InputModal({ onSubmit, onClose, darkMode, initialContent, initialTone }: InputModalProps) {
   const [content, setContent] = useState(initialContent);
   const [tone, setTone] = useState(initialTone);
@@ -230,11 +230,10 @@ const handleRegenerateSection = useCallback(
     try {
       setLoading(true);
 
-      const res = await fetch("http://127.0.0.1:5000/api/workflow/regenerate-section", {
+      const res = await fetch(`${API_BASE_URL}/api/workflow/regenerate-section`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.NEXT_PUBLIC_BACKEND_API_KEY}`,
         },
         body: JSON.stringify({
           section,
@@ -367,11 +366,8 @@ if (section === "email") {
       formData.append("tone", tone);
       if (selectedFile) formData.append("file", selectedFile);
 
-      const res = await fetch("http://127.0.0.1:5000/api/workflow/start-stream", {
+      const res = await fetch(`${API_BASE_URL}/api/workflow/start-stream`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.NEXT_PUBLIC_BACKEND_API_KEY}`,
-      },
       body: formData,
     });
 
