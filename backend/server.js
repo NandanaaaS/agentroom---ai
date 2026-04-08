@@ -13,17 +13,6 @@ app.use(cors());
 // not the FormData/Files you are sending now.
 app.use(express.json());
 
-// --- API Key Middleware ---
-app.use((req, res, next) => {
-  const authHeader = req.headers["authorization"];
-  const apiKey = authHeader?.split(" ")[1]; 
-
-  if (!apiKey || apiKey !== process.env.BACKEND_API_KEY) {
-    console.log("❌ Unauthorized attempt");
-    return res.status(401).json({ error: "Unauthorized. Missing or invalid API key." });
-  }
-  next();
-});
 
 // REMOVED: upload.single("file") from here. 
 // It is already inside your workflow.js, so we don't need it twice.
